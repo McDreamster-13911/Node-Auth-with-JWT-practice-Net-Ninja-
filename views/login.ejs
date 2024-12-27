@@ -1,6 +1,6 @@
 <%- include('partials/header'); -%>
 
-<form>
+<form id="form">
     <h2>Log in</h2>
     <label for="email">Email</label>
     <input type="text" name="email" required>
@@ -18,18 +18,50 @@
 
 
 <script>
-    const form = document.querySelector("form");
+    document.addEventListener("DOMContentLoaded", () => {
+        // Select form and error message divs
+        const form = document.querySelector("#form");
+        const emailError = document.querySelector(".email.error");
+        const passwordError = document.querySelector(".password.error");
 
-    form.addEventListener("submit", (e) => {
-        e.preventDefault();
+        // Add submit event listener
+        form.addEventListener("submit", async (e) => {  
+            e.preventDefault();
 
-        // Get the values
-        const email = form.email.value;
-        const password = form.password.value;
+            // Clear previous errors
+            emailError.textContent = "";
+            passwordError.textContent = "";
 
-        console.log(email,password);
+            // Get the values from the form
+            const email = form.email.value;
+            const password = form.password.value;
 
-    })
+            try {
+                // Send POST request to /login
+                const res = await fetch("/login", {
+                    method: "POST",
+                    body: JSON.stringify({ email: email, password: password }),
+                    headers: { "Content-Type": "application/json" },
+                });
+
+                // Parse response
+                const data = await res.json();
+
+                // Handle errors or success
+                if (res.status === 400) {
+                    // Display validation errors
+                    if (data.email) emailError.textContent = data.email;
+                    if (data.password) passwordError.textContent = data.password;
+                } else if (res.ok) {
+                    // Redirect or show success message
+                    console.log("User logged in successfully:", data);
+                    location.assign("/");
+                }
+            } catch (err) {
+                console.error("An error occurred:", err);
+            }
+        });
+    });
 </script>
 
 <%- include('partials/footer'); -%>
