@@ -14,7 +14,16 @@ const handleErrors = (err) =>
         return errors;
     }
 
+    // Incorrect email
+    if(err.message === "Incorrect Email")
+    {
+        errors.email = "That email is not registered";
+    }
 
+    if(err.message === "Incorrect Password")
+    {
+        errors.password = "That password is incorrect";
+    }
 
     // validation errors
     if(err.message.includes("user validation failed"))
@@ -64,8 +73,11 @@ module.exports.login_post = async (req,res) => {
 
     try {
         const user = await User.login(email, password);
+        const token = createToken(user._id);
+        res.cookie("jwt", token, { httpOnly : true, maxAge : maxAge * 1000});
         res.status(200).json({user : user._id});
     } catch (err) {
-        res.status(400).json({})
+        const errors = handleErrors(err);
+        res.status(400).json(errors)
     }
 }
